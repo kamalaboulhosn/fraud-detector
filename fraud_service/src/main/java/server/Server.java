@@ -1,0 +1,68 @@
+package server;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Executors;
+
+/**
+ * A simple Java HTTP server skeleton.
+ */
+public class Server {
+    private static AgentCaller agentCaller = new AgentCaller();
+    public static void main(String[] args) throws IOException {
+        int port = 8080;
+
+        // 1. Create an HttpServer instance
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+
+        // 2. Create a "context" for the /message URL, linking it to a handler
+        server.createContext("/message", new MessageHandler());
+
+        // 3. Set a default executor (optional, good practice)
+        server.setExecutor(Executors.newSingleThreadExecutor());
+
+        // 4. Start the server
+        server.start();
+
+        System.out.println("Server started. Listening on port " + port);
+        System.out.println("Access: http://localhost:" + port + "/message");
+    }
+
+    /**
+     * This inner class handles all requests for the /message context.
+     */
+    static class MessageHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if ("POST".equals(exchange.getRequestMethod())) {
+              // Get the request body as an InputStream
+                    InputStream is = exchange.getRequestBody();
+
+                    // Read all bytes from the stream into a string
+                    String requestBody = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+
+                // This is the response body
+                String responseBody = agentCaller.executeRequest(requestBody);
+
+                // Set response headers (HTTP 200 OK)
+                exchange.sendResponseHeaders(200, responseBody.getBytes(StandardCharsets.UTF_8).length);
+
+                // Get the output stream to write the response
+                try (OutputStream os = exchange.getResponseBody()) {
+                    os.write(responseBody.getBytes(StandardCharsets.UTF_8));
+                }
+
+            } else {
+                // Send "405 Method Not Allowed" for other request types
+                exchange.sendResponseHeaders(405, -1); // -1 means no response body
+            }
+        }
+    }
+}
