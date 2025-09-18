@@ -10,7 +10,7 @@ The agent publishes messages to Cloud Pub/Sub. It publishes every analyized
 transaction to one topic and then any cards deemed compromised to another. The
 general flow of data looks like this:
 
-![Architecture Diagram](https://github.com/kamalaboulhosn/fraud-detector/blob/c5b74850c215a77a26180e43cf86f822c4cd27e9/fraud_flow.png?raw=true)
+![Architecture Diagram](https://github.com/kamalaboulhosn/fraud-detector/blob/main/fraud_flow.png?raw=true)
 
 ## Setup
 
