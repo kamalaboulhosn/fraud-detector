@@ -143,7 +143,7 @@ public class TransactionGenerator {
     private static final Map<String, String> cardIpMap = new HashMap<>();
 
     // Simulated Global Clock (as epoch milliseconds)
-    private static long simulatedCurrentTime = System.currentTimeMillis();
+    private static long simulatedCurrentTime = System.currentTimeMillis() - (262800L * 60 * 1000);
 
     /**
      * Generates a random string of digits of a given length.
