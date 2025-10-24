@@ -33,7 +33,7 @@ public class TransactionGenerator {
     // --- Configuration ---
     private static final String PROJECT_ID = "my-project";
     private static final String TOPIC_ID = "my-topict";
-    private static final String ENDPOINT = "us-central2-pubsub.sandbox.googleapis.com:443";
+    private static final String ENDPOINT = "us-central1-pubsub.googleapis.com:443";
 
     // --- Fraud Injection Configuration ---
     private static final double FRAUD_PROBABILITY = 0.02;
