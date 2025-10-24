@@ -10,7 +10,6 @@ from typing import Any
 from typing import Optional
 from typing_extensions import override
 import asyncio
-import logging
 import os
 import tomllib as tomllib
 
@@ -20,8 +19,7 @@ PROJECT_ID = ""
 LOCATION = "us-central1"  # For other options, see https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview#supported-regions
 STAGING_BUCKET = ""
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+session_service = None
 
 class ImplicitSessionService(BaseSessionService):
     """
@@ -50,29 +48,31 @@ class ImplicitSessionService(BaseSessionService):
         config = None,
     ):
         """
-        Gets a session by its ID, creating it if it does not exist.
+        Gets a session for a user, creating it if it does not exist. Assume
+        one session per user exists.
 
         This method is guaranteed to return a Session object and will not
         return None.
         """
-        logger.info("Get session " + user_id + " " + session_id)
-        # Attempt to get the session from the proxied service
-        session = await self._proxied_service.get_session(
+        print("Get session " + user_id + " " + session_id)
+        sessions = await self._proxied_service.list_sessions(
             app_name=app_name,
             user_id=user_id,
-            session_id=session_id,
-            config=config,
         )
-
-        # If it doesn't exist (returns None), create it implicitly.
-        if session is None:
-            session = await self._proxied_service.create_session(
-                app_name=app_name,
-                user_id=user_id,
-                session_id=session_id,
-                # The implicitly created session starts with an empty state.
-                state=None,
-            )
+        if len(sessions.sessions) > 0:
+          print("Found an existing session " + str(len(sessions.sessions)))
+          session = sessions.sessions[0]
+        else:
+          print("Creating a session")
+          session = await self._proxied_service.create_session(
+              app_name=app_name,
+              user_id=user_id,
+              #session_id=session_id,
+              # The implicitly created session starts with an empty state.
+              state=None,
+          )
+        print("Got session " + user_id)
+        print(session)
         return session
 
     @override
@@ -84,6 +84,7 @@ class ImplicitSessionService(BaseSessionService):
         state: Optional[dict[str, Any]] = None,
         session_id: Optional[str] = None,
     ):
+        print("Creating a required session!")
         """Proxies the create_session call to the underlying service."""
         return await self._proxied_service.create_session(
             app_name=app_name,
@@ -111,13 +112,15 @@ class ImplicitSessionService(BaseSessionService):
         )
 
 def get_session_service():
-  vaiss = VertexAiSessionService(
-      project=PROJECT_ID,
-      location=LOCATION,
-      agent_engine_id=os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ID"),
-  )
-  inss = InMemorySessionService()
-  return ImplicitSessionService(inss)
+  global session_service
+  if session_service is None:
+    vaiss = VertexAiSessionService(
+        project=PROJECT_ID,
+        location=LOCATION,
+        agent_engine_id=1989522309995560960
+    )
+    session_service = ImplicitSessionService(vaiss)
+  return session_service
 
 # Initialize the Vertex AI SDK
 vertexai.init(
@@ -126,7 +129,7 @@ vertexai.init(
     staging_bucket=STAGING_BUCKET,
 )
 # Wrap the agent in an AdkApp object
-logger.info("Start it up")
+print("Start it up")
 app = agent_engines.AdkApp(
     agent=root_agent,
     enable_tracing=True,
@@ -152,19 +155,23 @@ remote_app = agent_engines.create(
 )
 
 # Uncomment below  and comment out remote_app definition to test locally.
-# async def main():
-#     """The main async function to run our code."""
-#     print("Entered the main async function.")
+# async def make_request(amount, ip, timestamp):
 #     events = []
 #     async for event in app.async_stream_query(
-#         user_id="u_123",
-#         session_id="12345",
-#         message="{\"credit_card_number\": \"1234567812345678\", \"receiver\": \"Best Buy\", \"amount\": 10000.05, \"ip_address\": \"103.109.106.5\"}",
+#         user_id="8234567812345634",
+#         session_id="8234567812345634",
+#         message="{\"credit_card_number\": \"8234567812345634\", \"receiver\": \"My Shop\", \"amount\": " + str(amount) + "\", ip_address\": \"" + ip + "\", \"timestamp\":" + timestamp + "\"}"
 #     ):
 #         events.append(event)
 
 #     # The full event stream shows the agent's thought process
 #     print("--- Full Event Stream ---")
 #     for event in events:
-#         print(event)
+#         print("EVENT:" + str(event))
+
+# async def main():
+#     """The main async function to run our code."""
+#     print("Entered the main async function.")
+#     await make_request(10.05, "103.109.106.5", "2025-10-01 07:00:00.00000Z")
+#     await make_request(12000.99, "63.35.253.23", "2025-10-01 07:10:00.00000Z")
 # asyncio.run(main())

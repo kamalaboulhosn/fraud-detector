@@ -32,7 +32,8 @@ public class TransactionGenerator {
 
     // --- Configuration ---
     private static final String PROJECT_ID = "my-project";
-    private static final String TOPIC_ID = "raw-transactions";
+    private static final String TOPIC_ID = "my-topict";
+    private static final String ENDPOINT = "us-central2-pubsub.sandbox.googleapis.com:443";
 
     // --- Fraud Injection Configuration ---
     private static final double FRAUD_PROBABILITY = 0.02;
@@ -143,7 +144,7 @@ public class TransactionGenerator {
     private static final Map<String, String> cardIpMap = new HashMap<>();
 
     // Simulated Global Clock (as epoch milliseconds)
-    private static long simulatedCurrentTime = System.currentTimeMillis() - (262800L * 60 * 1000);
+    private static long simulatedCurrentTime = System.currentTimeMillis() - (125400L * 60 * 1000);
 
     /**
      * Generates a random string of digits of a given length.
@@ -248,6 +249,7 @@ public class TransactionGenerator {
         try {
             publisher = Publisher.newBuilder(topicName)
                     .setEnableMessageOrdering(true)
+                    .setEndpoint(ENDPOINT)
                     .build();
 
             System.out.println("Starting transaction generation for topic: " + topicName);
