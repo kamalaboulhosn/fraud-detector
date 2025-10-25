@@ -117,7 +117,6 @@ def get_session_service():
     vaiss = VertexAiSessionService(
         project=PROJECT_ID,
         location=LOCATION,
-        agent_engine_id=1989522309995560960
     )
     session_service = ImplicitSessionService(vaiss)
   return session_service
