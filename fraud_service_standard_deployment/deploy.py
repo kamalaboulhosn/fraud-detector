@@ -117,6 +117,7 @@ def get_session_service():
     vaiss = VertexAiSessionService(
         project=PROJECT_ID,
         location=LOCATION,
+        agent_engine_id=os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ID"),
     )
     session_service = ImplicitSessionService(vaiss)
   return session_service
